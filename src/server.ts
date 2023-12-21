@@ -23,10 +23,12 @@ app.use("/users", userRoutes);
 app.use("/movies", movieRoutes);
 app.use("/genres", genreRoutes);
 
-app.use(errorHandler);
-
-app.get("/hi", (req,res)=>{
+app.get("/", (req,res)=>{
   res.status(200).json({message: "This is my CineMate backend"})
 })
+
+app.use(errorHandler);
+
+
 
 export default app;
