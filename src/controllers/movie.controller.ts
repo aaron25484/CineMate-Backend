@@ -1,13 +1,12 @@
 import { Request, Response } from "express";
-import { prismaClient } from "../db/client";
-import { convertToType } from "../utils/utils";
+import prisma from "../db/client";
 import fs from "fs/promises";
 import { uploadImage } from "../utils/cloudinary";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 
 export const getAllMovies = async (req: Request, res: Response) => {
   try {
-    const movies = await prismaClient.movie.findMany();
+    const movies = await prisma.movie.findMany();
 
     res.status(200).json(movies);
   } catch (error) {
@@ -21,8 +20,8 @@ export const getMovie = async (req: Request, res: Response) => {
   } = req;
 
   try {
-    const movie = await prismaClient.movie.findUnique({
-      where: { id: convertToType(movieId) },
+    const movie = await prisma.movie.findUnique({
+      where: { id: (movieId) },
     });
 
     res.status(200).json(movie);
@@ -35,7 +34,7 @@ export const createMovie = async (req: Request, res: Response) => {
   try {
     const movieData = req.body;
 
-    const newMovie = await prismaClient.movie.create({
+    const newMovie = await prisma.movie.create({
       data: {
         name: movieData.name,
         score: Number(movieData.score),
@@ -61,8 +60,8 @@ export const deleteMovie = async (req: Request, res: Response) => {
       return res.status(400).send("Movie ID is required");
     }
 
-    const deletedMovie = await prismaClient.movie.findUnique({
-      where: { id: convertToType(movieId) },
+    const deletedMovie = await prisma.movie.findUnique({
+      where: { id: (movieId) },
       include: { genre: true, User: true },
     });
 
@@ -72,27 +71,27 @@ export const deleteMovie = async (req: Request, res: Response) => {
 
     const genreId = deletedMovie.genre.id;
 
-    await prismaClient.genre.update({
-      where: { id: convertToType(genreId) },
+    await prisma.genre.update({
+      where: { id: (genreId) },
       data: {
         movies: {
-          disconnect: { id: convertToType(movieId) },
+          disconnect: { id: (movieId) },
         },
       },
     });
 
     const userId = deletedMovie.User?.id;
-    await prismaClient.user.update({
-      where: { id: convertToType(userId) },
+    await prisma.user.update({
+      where: { id: (userId) },
       data: {
         movies: {
-          disconnect: { id: convertToType(movieId) },
+          disconnect: { id: (movieId) },
         },
       },
     });
 
-    await prismaClient.movie.delete({
-      where: { id: convertToType(movieId) },
+    await prisma.movie.delete({
+      where: { id: (movieId) },
     });
 
     res
@@ -108,8 +107,8 @@ export const updateMovie = async (req: Request, res: Response) => {
   const { name, poster, score, genre } = req.body;
 
   try {
-    const movie = await prismaClient.movie.findUnique({
-      where: { id: convertToType(movieId) },
+    const movie = await prisma.movie.findUnique({
+      where: { id: (movieId) },
     });
 
     if (!movie) {
@@ -118,8 +117,8 @@ export const updateMovie = async (req: Request, res: Response) => {
 
     const oldGenreId = movie.genreId;
 
-    const updatedMovie = await prismaClient.movie.update({
-      where: { id: convertToType(movieId) },
+    const updatedMovie = await prisma.movie.update({
+      where: { id: (movieId) },
       data: {
         name,
         poster,
@@ -132,14 +131,14 @@ export const updateMovie = async (req: Request, res: Response) => {
     });
 
     if (genre && oldGenreId !== updatedMovie.genre.id) {
-      await prismaClient.genre.update({
-        where: { id: convertToType(oldGenreId) },
-        data: { movies: { disconnect: { id: convertToType(movieId) } } },
+      await prisma.genre.update({
+        where: { id: (oldGenreId) },
+        data: { movies: { disconnect: { id: (movieId) } } },
       });
 
-      await prismaClient.genre.update({
-        where: { id: convertToType(updatedMovie.genre.id) },
-        data: { movies: { connect: { id: convertToType(updatedMovie.id) } } },
+      await prisma.genre.update({
+        where: { id: (updatedMovie.genre.id) },
+        data: { movies: { connect: { id: (updatedMovie.id) } } },
       });
     }
     res.status(201).json(updateMovie);

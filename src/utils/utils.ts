@@ -1,15 +1,6 @@
-import { DATA_SOURCE } from "../db/client";
 import fs from "fs-extra";
 import { Request, Response } from "express";
 import { uploadImage } from "../utils/cloudinary";
-
-export const convertToType = (id: string) => {
-  if (DATA_SOURCE === "postgres") {
-    return Number(id);
-  } else {
-    return id;
-  }
-};
 
 export const uploadPosterWithCloudinary = async (
   req: Request,

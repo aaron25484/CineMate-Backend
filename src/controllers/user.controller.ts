@@ -1,10 +1,9 @@
 import { Request, Response } from "express";
-import { prismaClient } from "../db/client";
-import { convertToType } from "../utils/utils";
+import prisma from "../db/client";
 
 export const getAllUsers = async (req: Request, res: Response) => {
   try {
-    const users = await prismaClient.user.findMany();
+    const users = await prisma.user.findMany();
 
     res.status(201).json(users);
   } catch (error) {
@@ -18,8 +17,8 @@ export const getUser = async (req: Request, res: Response) => {
   } = req;
 
   try {
-    const user = await prismaClient.user.findUnique({
-      where: { email: convertToType(email) },
+    const user = await prisma.user.findUnique({
+      where: { email: (email) },
       include: { movies: true },
     });
 
@@ -37,13 +36,13 @@ export const createUser = async (req: Request, res: Response) => {
   try {
     const { name, email, password } = req.body;
 
-    const existingUser = await prismaClient.user.findUnique({
+    const existingUser = await prisma.user.findUnique({
       where: { email },
     });
     if (existingUser) {
       res.status(200).json(existingUser);
     } else {
-      const newUser = await prismaClient.user.create({
+      const newUser = await prisma.user.create({
         data: {
           name,
           email,
@@ -72,8 +71,8 @@ export const deleteUser = async (req: Request, res: Response) => {
       return res.status(400).send("User ID is required");
     }
 
-    const deletedUser = await prismaClient.user.delete({
-      where: { id: convertToType(userId) },
+    const deletedUser = await prisma.user.delete({
+      where: { id: (userId) },
     });
 
     if (!deletedUser) {
@@ -91,8 +90,8 @@ export const updateUser = async (req: Request, res: Response) => {
   const { name, password } = req.body;
 
   try {
-    const updatedUser = await prismaClient.user.update({
-      where: { email: convertToType(email) },
+    const updatedUser = await prisma.user.update({
+      where: { email: (email) },
       data: { name, password },
       select: { name: true, password: true, updatedAt: true },
     });
@@ -110,8 +109,8 @@ export const getUserWatchlist = async (req: Request, res: Response) => {
       throw new Error("Email is required");
     }
 
-    const user = await prismaClient.user.findUnique({
-      where: { email: convertToType(email) },
+    const user = await prisma.user.findUnique({
+      where: { email: (email) },
       include: { movies: true },
     });
 
@@ -138,11 +137,11 @@ export const addToWatchlist = async (req: Request, res: Response) => {
       throw new Error("User ID and Movie ID are required");
     }
 
-    const user = await prismaClient.user.findUnique({
-      where: { email: convertToType(email) },
+    const user = await prisma.user.findUnique({
+      where: { email: (email) },
     });
 
-    const isMovieInWatchlist = user.watchlist.includes(convertToType(movieId));
+    const isMovieInWatchlist = user?.watchlist.includes((movieId));
 
     if (isMovieInWatchlist) {
       return res
@@ -150,11 +149,11 @@ export const addToWatchlist = async (req: Request, res: Response) => {
         .json({ message: "Movie is already in the watchlist" });
     }
 
-    user?.watchlist.push(convertToType(movieId));
+    user?.watchlist.push((movieId));
 
-    const updatedUser = await prismaClient.user.update({
+    const updatedUser = await prisma.user.update({
       where: {
-        email: convertToType(email),
+        email: (email),
       },
       data: {
         watchlist: user?.watchlist,
@@ -171,8 +170,8 @@ export const deleteFromWatchlist = async (req: Request, res: Response) => {
   const { email } = req.params;
   const { movieId } = req.body;
   try {
-    const user = await prismaClient.user.findUnique({
-      where: { email: convertToType(email) },
+    const user = await prisma.user.findUnique({
+      where: { email: (email) },
     });
     const deleteMovieFromWatchlist = user?.watchlist.filter(
       (email: string | number) => email !== movieId
@@ -182,9 +181,9 @@ export const deleteFromWatchlist = async (req: Request, res: Response) => {
       return res.status(404).send("User not found");
     }
 
-    await prismaClient.user.update({
+    await prisma.user.update({
       where: {
-        email: convertToType(email),
+        email: (email),
       },
       data: {
         watchlist: deleteMovieFromWatchlist,

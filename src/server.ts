@@ -6,6 +6,7 @@ import cors from "cors";
 import errorHandler from "./middleware/error.middleware";
 import FileUpload from "express-fileupload";
 import { checkJWTMiddleware } from "./middleware/checkJWT.middleware";
+import prisma from "./db/client";
 
 const app: Application = express();
 app.use(express.json());
@@ -18,6 +19,8 @@ app.use(
     abortOnLimit: true,
   })
 );
+prisma.$connect().then(() => {
+  console.log("Connected to MongoDB via Prisma");})
 
 app.use("/users", userRoutes);
 app.use("/movies", movieRoutes);
