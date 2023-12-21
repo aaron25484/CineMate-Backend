@@ -25,4 +25,8 @@ app.use("/genres", genreRoutes);
 
 app.use(errorHandler);
 
+app.get("/hi", (req,res)=>{
+  res.status(200).json({message: "This is my CineMate backend"})
+})
+
 export default app;
