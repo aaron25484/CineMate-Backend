@@ -1,5 +1,5 @@
 import { PrismaClient as MongoClient } from "../../prisma/generated/mongodb_client";
-import { Prisma } from "@prisma/client";
+import { Prisma } from "../../prisma/generated/mongodb_client";
 import { DefaultArgs } from "@prisma/client/runtime/library";
 
 export const DATA_SOURCE: String = process.env.DATA_SOURCE ?? "mongo";
