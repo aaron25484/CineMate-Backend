@@ -60,8 +60,8 @@ export const deleteMovie = async (req: Request, res: Response) => {
       return res.status(400).send("Movie ID is required");
     }
 
-    const deletedMovie = await prisma.movie.findUnique({
-      where: { id: (movieId) },
+    const deletedMovie = await prisma.movie.delete({
+      where: { id: movieId },
       include: { genre: true, User: true },
     });
 
@@ -69,38 +69,12 @@ export const deleteMovie = async (req: Request, res: Response) => {
       return res.status(404).send("Movie not found");
     }
 
-    const genreId = deletedMovie.genre.id;
-
-    await prisma.genre.update({
-      where: { id: (genreId) },
-      data: {
-        movies: {
-          disconnect: { id: (movieId) },
-        },
-      },
-    });
-
-    const userId = deletedMovie.User?.id;
-    await prisma.user.update({
-      where: { id: (userId) },
-      data: {
-        movies: {
-          disconnect: { id: (movieId) },
-        },
-      },
-    });
-
-    await prisma.movie.delete({
-      where: { id: (movieId) },
-    });
-
-    res
-      .status(200)
-      .json({ message: "Movie deleted successfully", deletedMovie });
+    res.status(200).json({ message: "Movie deleted successfully", deletedMovie });
   } catch (error) {
     res.status(500).send(error);
   }
 };
+
 
 export const updateMovie = async (req: Request, res: Response) => {
   const { movieId } = req.params;
