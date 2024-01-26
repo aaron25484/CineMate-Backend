@@ -13,6 +13,5 @@ movieRoutes.get("/", getAllMovies);
 movieRoutes.post("/", createMovie);
 movieRoutes.delete("/:movieId", deleteMovie);
 movieRoutes.get("/:movieId", getMovie);
-movieRoutes.patch("/:movieId", updateMovie);
-
+movieRoutes.put("/:movieId", updateMovie);
 export default movieRoutes;

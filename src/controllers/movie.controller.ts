@@ -1,8 +1,5 @@
 import { Request, Response } from "express";
 import prisma from "../db/client";
-import fs from "fs/promises";
-import { uploadImage } from "../utils/cloudinary";
-import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 
 export const getAllMovies = async (req: Request, res: Response) => {
   try {
@@ -75,48 +72,51 @@ export const deleteMovie = async (req: Request, res: Response) => {
   }
 };
 
-
 export const updateMovie = async (req: Request, res: Response) => {
   const { movieId } = req.params;
   const { name, poster, score, genre } = req.body;
 
   try {
     const movie = await prisma.movie.findUnique({
-      where: { id: (movieId) },
+      where: { id: movieId },
     });
-
     if (!movie) {
       return res.status(404).send("Movie not found");
     }
 
-    const oldGenreId = movie.genreId;
+    const allGenres = await prisma.genre.findMany();
+  
+    const existingGenre = allGenres.find((g) => g.id === genre);
 
-    const updatedMovie = await prisma.movie.update({
-      where: { id: (movieId) },
-      data: {
-        name,
-        poster,
-        score,
-        genre: {
-          connect: { name: genre },
-        },
-      },
-      include: { genre: true },
-    });
-
-    if (genre && oldGenreId !== updatedMovie.genre.id) {
-      await prisma.genre.update({
-        where: { id: (oldGenreId) },
-        data: { movies: { disconnect: { id: (movieId) } } },
-      });
-
-      await prisma.genre.update({
-        where: { id: (updatedMovie.genre.id) },
-        data: { movies: { connect: { id: (updatedMovie.id) } } },
-      });
+    if (!existingGenre) {
+      console.error("Genre not found. Please create the genre first.", Error);
+      return res.status(400).send("Genre not found");
     }
-    res.status(201).json(updateMovie);
+
+    const movieData = {
+      id: movieId,
+      name: name,
+      score: Number(score),
+      genre: genre,
+      poster: poster,
+    };
+
+const updatedMovie = await prisma.movie.update({
+  where: { id: movieData.id },
+  data: {
+    name: movieData.name,
+    score: Number(movieData.score),
+    genre: {
+      connect: { id: movieData.genre },
+    },
+    poster: movieData.poster,
+  },
+});
+
+  res.status(201).json({ message: "Movie updated successfully", updatedMovie });
   } catch (error) {
-    res.status(500).json(error);
+    console.error("Error updating movie:", error);
+    res.status(500).json({ error: "Failed to update movie" });
   }
-};
+}
+
